@@ -49,16 +49,7 @@ def main():
     from datetime import datetime
     dados_completos["last_updated"] = datetime.now().isoformat()
 
-    output_filename = "dados_acoes.json"
-    print(f"\nSalvando todos os dados em {output_filename}...")
-    with open(output_filename, 'w', encoding='utf-8') as f:
-        json.dump(dados_completos, f, ensure_ascii=False, indent=4)
-    
-    # Adiciona a data e hora da última atualização
-    from datetime import datetime
-    dados_completos["last_updated"] = datetime.now().isoformat()
-
-    output_filename = "dados_acoes.json"
+    output_filename = "db/dados_acoes.json"
     print(f"\nSalvando todos os dados em {output_filename}...")
     with open(output_filename, 'w', encoding='utf-8') as f:
         json.dump(dados_completos, f, ensure_ascii=False, indent=4)
