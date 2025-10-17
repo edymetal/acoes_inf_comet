@@ -159,37 +159,61 @@
     </div>
 
     <script>
-            let acaoData = {};
-            let allAcaoCodes = [];
-            let historicoChart = null;
+        let acaoData = {};
+        let allAcaoCodes = [];
+        let historicoChart = null;
 
-            // Função para carregar os dados do JSON
-            async function loadAcaoData() {
-                try {
-                    const response = await fetch('db/dados_acoes.json');
-                    if (!response.ok) {
-                        throw new Error(`HTTP error! status: ${response.status}`);
-                    }
-                    return await response.json();
-                } catch (error) {
-                    console.error('Erro ao carregar dados_acoes.json:', error);
-                    return {};
+        // Função para carregar os dados da Função Netlify
+        async function loadAcaoData() {
+            try {
+                const response = await fetch('/.netlify/functions/get_acoes_data'); // Chama a Função Netlify
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
                 }
+                return await response.json();
+            } catch (error) {
+                console.error('Erro ao carregar dados das ações da Função Netlify:', error);
+                return {};
+            }
+        }
+
+        // Função para atualizar o dashboard com os novos dados
+        async function updateDashboardData() {
+            const newAcaoData = await loadAcaoData();
+            if (Object.keys(newAcaoData).length === 0) {
+                console.warn("Nenhum dado novo carregado. Mantendo dados existentes.");
+                return;
+            }
+            acaoData = newAcaoData; // Atualiza a variável global acaoData
+
+            const lastUpdatedElement = document.getElementById('last-updated-date');
+            if (acaoData.last_updated && lastUpdatedElement) {
+                const date = new Date(acaoData.last_updated);
+                const options = { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' };
+                lastUpdatedElement.textContent = `Atualizado em: ${date.toLocaleDateString('pt-BR', options)} ${date.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}`;
             }
 
-    </script>
+            // A propriedade last_updated agora é parte do JSON retornado pela função Netlify e não precisa ser removida.
+            // Ela será usada para exibir a data de atualização.
 
-    <script>
+            allAcaoCodes = Object.keys(acaoData).filter(key => key !== 'last_updated').sort(); // Filtra 'last_updated' para não ser tratado como ticker
+            initializeDashboard();
+
+            // Se uma ação específica estiver sendo exibida, re-renderize-a com os novos dados
+            const currentActiveLink = document.querySelector('#item-list a.active');
+            if (currentActiveLink) {
+                const acaoCode = currentActiveLink.getAttribute('data-acao');
+                renderAcaoDetails(acaoCode);
+            }
+        }
+
         document.addEventListener('DOMContentLoaded', async function() {
             const itemList = document.getElementById('item-list');
             const searchInput = document.getElementById('search-input');
             const overviewScreen = document.getElementById('overview-screen');
             const detailsScreen = document.getElementById('details-screen');
             const dashboardLink = document.getElementById('dashboard-link');
-            let acaoData = await loadAcaoData(); // Carrega os dados de forma assíncrona
-            let allAcaoCodes = [];
-            let historicoChart = null;
-
+            
             const formatValue = (value, type = 'default') => {
                 if (value === null || typeof value === 'undefined') return 'N/A';
                 if (type === 'currency') return value.toLocaleString('en-US', { style: 'currency', currency: 'USD' }); // Usar USD como padrão ou inferir
@@ -197,21 +221,6 @@
                 if (type === 'percent') return `${(value * 100).toFixed(2)}%`;
                 return value;
             };
-
-            const lastUpdatedElement = document.getElementById('last-updated-date');
-            if (acaoData.last_updated && lastUpdatedElement) {
-                const date = new Date(acaoData.last_updated);
-                const options = { year: 'numeric', month: '2-digit', day: '2-digit' };
-                lastUpdatedElement.innerHTML = ''; // Limpa o conteúdo existente (incluindo o ícone)
-                lastUpdatedElement.textContent = `Atualizado em: ${date.toLocaleDateString('pt-BR', options)}`;
-            }
-
-            // Remover a propriedade last_updated do objeto acaoData para que não seja tratada como um ticker
-            const lastUpdatedDate = acaoData.last_updated; // Salva a data antes de deletar
-            delete acaoData.last_updated;
-
-            allAcaoCodes = Object.keys(acaoData).sort();
-            initializeDashboard();
 
             function initializeDashboard() {
                 if (allAcaoCodes.length === 0) {
@@ -414,7 +423,11 @@
                 dashboardLink.classList.add('active');
             }
 
-            initializeDashboard();
+            // Chama a função de atualização inicialmente
+            updateDashboardData();
+
+            // Configura a atualização a cada 30 segundos (30000 milissegundos)
+            setInterval(updateDashboardData, 30000);
 
             const menuToggleBtn = document.getElementById('menu-toggle-btn');
             const sidebar = document.getElementById('sidebar');
