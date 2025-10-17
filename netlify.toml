@@ -1,6 +1,4 @@
 [build]
-  publish = "." # Assuming your index.html is at the root
+  publish = "."
   functions = "netlify/functions"
-
-[functions]
-  python_version = "3.9" # Or your preferred Python version, 3.9 is a common choice
+  environment = { PYTHON_VERSION = "3.9" } # Correct way to specify Python version
