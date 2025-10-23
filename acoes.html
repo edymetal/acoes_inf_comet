@@ -155,6 +155,11 @@
                     <span class="label">Maior Variação da Média</span>
                     <span class="value" id="highest-avg-variation"></span>
                 </div>
+                <div class="financial-card">
+                    <i class="bi bi-graph-down-arrow icon"></i>
+                    <span class="label">Menor Variação da Média</span>
+                    <span class="value" id="lowest-avg-variation"></span>
+                </div>
             </div>
             <p class="mt-4" id="overview-last-updated-date"></p>
         </div>
@@ -233,6 +238,7 @@
                 let lowestPE = { value: Infinity, code: '' };
                 let highestDividendYield = { value: -Infinity, code: '' };
                 let highestAvgVariation = { value: -Infinity, code: '' };
+                let lowestAvgVariation = { value: Infinity, code: '' };
 
                 allAcaoCodes.forEach(code => {
                     const data = acaoData[code];
@@ -262,6 +268,10 @@
                                 highestAvgVariation.value = variation;
                                 highestAvgVariation.code = code;
                             }
+                            if (variation < lowestAvgVariation.value) {
+                                lowestAvgVariation.value = variation;
+                                lowestAvgVariation.code = code;
+                            }
                         }
                     }
                 });
@@ -274,6 +284,7 @@
                 document.getElementById('lowest-pe').textContent = lowestPE.code ? `${lowestPE.code} (${formatValue(lowestPE.value, 'number')})` : 'N/A';
                 document.getElementById('highest-dividend-yield').textContent = highestDividendYield.code ? `${highestDividendYield.code} (${formatValue(highestDividendYield.value, 'percent')})` : 'N/A';
                 document.getElementById('highest-avg-variation').textContent = highestAvgVariation.code ? `${highestAvgVariation.code} (${formatValue(highestAvgVariation.value / 100, 'percent')})` : 'N/A';
+                document.getElementById('lowest-avg-variation').textContent = lowestAvgVariation.code ? `${lowestAvgVariation.code} (${formatValue(lowestAvgVariation.value / 100, 'percent')})` : 'N/A';
 
                 if (lastUpdatedDate) {
                     const date = new Date(lastUpdatedDate);
