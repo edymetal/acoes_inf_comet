@@ -57,6 +57,14 @@
             overflow-y: auto;
         }
 
+        .sortable {
+            cursor: pointer;
+        }
+
+        .sortable:hover {
+            background-color: #f0f0f0;
+        }
+
         #menu-toggle-btn {
             display: none;
             position: fixed;
@@ -178,11 +186,11 @@
                     <table class="table table-striped table-hover">
                         <thead>
                             <tr>
-                                <th>Ação</th>
-                                <th>P/L (Trailing)</th>
-                                <th>Dividend Yield</th>
-                                <th>Variação da Média</th>
-                                <th>% Acima Máx. 12M</th>
+                                <th data-column="acao" class="sortable">Ação <i class="bi bi-arrow-down-up"></i></th>
+                                <th data-column="pl" class="sortable">P/L (Trailing) <i class="bi bi-arrow-down-up"></i></th>
+                                <th data-column="dy" class="sortable">Dividend Yield <i class="bi bi-arrow-down-up"></i></th>
+                                <th data-column="variacao" class="sortable">Variação da Média <i class="bi bi-arrow-down-up"></i></th>
+                                <th data-column="acima_max" class="sortable">% Acima Máx. 12M <i class="bi bi-arrow-down-up"></i></th>
                             </tr>
                         </thead>
                         <tbody id="all-acoes-table-body">
@@ -366,6 +374,68 @@
                     }
                 });
                 // --- Fim do novo código ---
+
+                // Adicionar event listeners para ordenação da tabela
+                let currentSort = { column: null, dir: 'asc' };
+
+                document.querySelectorAll('.sortable').forEach(header => {
+                    header.addEventListener('click', () => {
+                        const table = header.closest('table');
+                        const tbody = table.querySelector('tbody');
+                        const column = header.dataset.column;
+
+                        if (currentSort.column === column) {
+                            currentSort.dir = currentSort.dir === 'asc' ? 'desc' : 'asc';
+                        } else {
+                            currentSort.column = column;
+                            currentSort.dir = 'asc';
+                        }
+
+                        // Remover setas de ordenação de outros cabeçalhos
+                        table.querySelectorAll('th i').forEach(i => {
+                            i.classList.remove('bi-arrow-down', 'bi-arrow-up');
+                            i.classList.add('bi-arrow-down-up');
+                        });
+
+                        // Atualizar seta do cabeçalho atual
+                        const icon = header.querySelector('i');
+                        icon.classList.remove('bi-arrow-down-up');
+                        if (currentSort.dir === 'asc') {
+                            icon.classList.add('bi-arrow-up');
+                        } else {
+                            icon.classList.add('bi-arrow-down');
+                        }
+
+                        const rows = Array.from(tbody.querySelectorAll('tr'));
+
+                        rows.sort((a, b) => {
+                            let aVal = a.querySelector(`td:nth-child(${header.cellIndex + 1})`).innerText;
+                            let bVal = b.querySelector(`td:nth-child(${header.cellIndex + 1})`).innerText;
+
+                            // Converter para número se possível
+                            const aNum = parseFloat(aVal.replace('%', '').replace(',', '.'));
+                            const bNum = parseFloat(bVal.replace('%', '').replace(',', '.'));
+
+                            if (!isNaN(aNum) && !isNaN(bNum)) {
+                                aVal = aNum;
+                                bVal = bNum;
+                            } else {
+                                aVal = aVal.toLowerCase();
+                                bVal = bVal.toLowerCase();
+                            }
+
+                            if (aVal < bVal) {
+                                return currentSort.dir === 'asc' ? -1 : 1;
+                            }
+                            if (aVal > bVal) {
+                                return currentSort.dir === 'asc' ? 1 : -1;
+                            }
+                            return 0;
+                        });
+
+                        rows.forEach(row => tbody.appendChild(row));
+                    });
+                });
 
                 searchInput.addEventListener('input', function() {
                     const searchTerm = this.value.toLowerCase();
