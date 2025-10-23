@@ -23,6 +23,17 @@ def coletar_dados_financeiros_api(ticker_symbol):
             if isinstance(value, pd.Timestamp):
                 record[key] = value.isoformat()
 
+    # Calcular a média de 12 meses
+    if not hist.empty:
+        media_12_meses = hist['Close'].mean()
+        preco_atual = info.get('currentPrice')
+        if preco_atual is not None:
+            acima_da_media = preco_atual > media_12_meses
+            percentual_diferenca = ((preco_atual - media_12_meses) / media_12_meses) * 100
+            info['media_12_meses'] = media_12_meses
+            info['percentual_diferenca_media'] = percentual_diferenca
+            info['acima_da_media'] = str(acima_da_media)
+
     print("Dados financeiros obtidos com sucesso.")
     return {"info": info, "historico": hist_json}
 
