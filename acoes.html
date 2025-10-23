@@ -150,8 +150,13 @@
                     <span class="label">Maior Dividend Yield</span>
                     <span class="value" id="highest-dividend-yield"></span>
                 </div>
+                <div class="financial-card">
+                    <i class="bi bi-graph-up-arrow icon"></i>
+                    <span class="label">Maior Variação da Média</span>
+                    <span class="value" id="highest-avg-variation"></span>
+                </div>
             </div>
-            <p class="mt-4">Selecione uma ação na barra lateral para ver seus dados financeiros e histórico de preços detalhados.</p>
+            <p class="mt-4" id="overview-last-updated-date"></p>
         </div>
         <div id="details-screen" style="display: none;">
             <!-- Conteúdo detalhado da Ação será gerado aqui -->
@@ -227,6 +232,7 @@
                 let highestPE = { value: -Infinity, code: '' };
                 let lowestPE = { value: Infinity, code: '' };
                 let highestDividendYield = { value: -Infinity, code: '' };
+                let highestAvgVariation = { value: -Infinity, code: '' };
 
                 allAcaoCodes.forEach(code => {
                     const data = acaoData[code];
@@ -250,6 +256,13 @@
                                 highestDividendYield.code = code;
                             }
                         }
+                        if (data.info.percentual_diferenca_media && data.info.percentual_diferenca_media !== null && data.info.percentual_diferenca_media !== 'N/A') {
+                            const variation = Math.abs(data.info.percentual_diferenca_media); // Usar valor absoluto para "maior variação"
+                            if (variation > highestAvgVariation.value) {
+                                highestAvgVariation.value = variation;
+                                highestAvgVariation.code = code;
+                            }
+                        }
                     }
                 });
 
@@ -260,6 +273,13 @@
                 document.getElementById('highest-pe').textContent = highestPE.code ? `${highestPE.code} (${formatValue(highestPE.value, 'number')})` : 'N/A';
                 document.getElementById('lowest-pe').textContent = lowestPE.code ? `${lowestPE.code} (${formatValue(lowestPE.value, 'number')})` : 'N/A';
                 document.getElementById('highest-dividend-yield').textContent = highestDividendYield.code ? `${highestDividendYield.code} (${formatValue(highestDividendYield.value, 'percent')})` : 'N/A';
+                document.getElementById('highest-avg-variation').textContent = highestAvgVariation.code ? `${highestAvgVariation.code} (${formatValue(highestAvgVariation.value / 100, 'percent')})` : 'N/A';
+
+                if (lastUpdatedDate) {
+                    const date = new Date(lastUpdatedDate);
+                    const options = { year: 'numeric', month: '2-digit', day: '2-digit' };
+                    document.getElementById('overview-last-updated-date').textContent = `Última atualização: ${date.toLocaleDateString('pt-BR', options)}`;
+                }
                 // --- Fim do novo código ---
 
                 searchInput.addEventListener('input', function() {
